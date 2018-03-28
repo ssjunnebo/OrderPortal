@@ -7,7 +7,7 @@ from __future__ import print_function, absolute_import
 import os
 
 
-__version__ = '3.3.13'
+__version__ = '3.3.17'
 
 # Default settings, may be changed in a settings YAML file.
 settings = dict(
@@ -16,7 +16,6 @@ settings = dict(
     TORNADO_DEBUG=False,
     LOGGING_DEBUG=False,
     LOGGING_FORMAT='%(levelname)s [%(asctime)s] %(message)s',
-    PROCESSORS=[],
     SITE_DIR='{ROOT}/generic',
     SITE_NAME='OrderPortal',
     SITE_PERSONAL_DATA_POLICY='The data will be used only for activities directly related to this site.',
@@ -52,8 +51,6 @@ settings = dict(
     ORDERS_LIST_TAGS=True,
     ORDERS_LIST_FIELDS=[],
     ORDERS_LIST_STATUSES=[],
-    # XXX To be removed
-    ORDER_MESSAGES_FILEPATH='{SITE_DIR}/order_messages.yaml',
     ACCOUNT_INVOICE_INFO=True,
     ACCOUNT_FUNDER_INFO=True,
     ACCOUNT_FUNDER_INFO_GENDER=True,
@@ -65,7 +62,6 @@ settings = dict(
     DOCUMENTATION_URL='https://github.com/pekrau/OrderPortal/wiki',
     MARKDOWN_URL='http://daringfireball.net/projects/markdown/syntax',
     # For database initialization only; ignored after that.
-    INITIAL_TEXTS_FILEPATH='{SITE_DIR}/initial_texts.yaml',
     INITIAL_ORDER_MESSAGES_FILEPATH='{SITE_DIR}/initial_order_messages.yaml',
     INITIAL_ACCOUNT_MESSAGES_FILEPATH='{SITE_DIR}/initial_account_messages.yaml',
     )

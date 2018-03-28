@@ -1,7 +1,8 @@
 """ OrderPortal: Initialize the order database, directly towards CouchDB.
-1) Wipes out the old database.
-2) Loads the design documents.
-3) Loads the initial texts file, as defined in the configuration file.
+1) Wipe out the old database.
+2) Load the design documents.
+3) Load the dump file, if given.
+4) Load the initial texts from files, unless already loaded.
 """
 
 from __future__ import print_function, absolute_import
@@ -16,8 +17,9 @@ from orderportal import settings
 from orderportal import utils
 from orderportal import admin
 from orderportal.scripts.dump import undump
-from orderportal.scripts.load_designs import load_designs
+from orderportal.init.load_designs import load_designs
 
+INIT_TEXTS_FILEPATH = 'init_texts.yaml'
 
 def get_args():
     parser = utils.get_command_line_parser(description=
@@ -84,17 +86,13 @@ def init_database(dumpfilepath=None):
             messages['_id'] = 'account_messages'
             messages[constants.DOCTYPE] = constants.META
             db.save(messages)
-    # Load texts from the init text file only if missing id db
-    filepath = settings.get('INITIAL_TEXTS_FILEPATH')
-    if filepath:
-        print('loading missing texts from', filepath)
-        try:
-            with open(utils.expand_filepath(filepath)) as infile:
-                texts = yaml.safe_load(infile)
-        except IOError:
-            print('Warning: could not load', filepath)
-            texts = dict()
-    else:
+    # Load texts from the initial texts YAML file only if missing in db
+    print('loading any missing texts from', INIT_TEXTS_FILEPATH)
+    try:
+        with open(INIT_TEXTS_FILEPATH) as infile:
+            texts = yaml.safe_load(infile)
+    except IOError:
+        print('Warning: could not load', INIT_TEXTS_FILEPATH)
         texts = dict()
     for name in constants.TEXTS:
         if len(list(db.view('text/name', key=name))) == 0:
