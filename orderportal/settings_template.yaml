@@ -1,5 +1,8 @@
 # OrderPortal: Settings file.
 
+# This file changes the default values set in the 'settings' dictionary
+# defined in the '__init__.py' file.
+
 ### You should copy this file and modify for your site.
 ### Name the file 'hostname.yaml', where hostname is the
 ### obtained by the following shell command:
@@ -35,9 +38,13 @@ SITE_NAVBAR_ICON: 'orderportal32.png'
 SITE_HOME_ICON: 'orderportal144.png'
 SITE_SUPPORT_EMAIL: 'my.email@my-domain.com'
 
+# Order status and transition definition files
+ORDER_STATUSES_FILEPATH: '{SITE_DIR}/order_statuses.yaml'
+ORDER_TRANSITIONS_FILEPATH: '{SITE_DIR}/order_transitions.yaml'
+
 # Use sequentially numbered order identifiers
-ORDER_ID_FORMAT: 'MY{0:=05d}'
-ORDER_ID_REGEXP: 'MY\d+'
+ORDER_IDENTIFIER_FORMAT: 'MY{0:=05d}'
+ORDER_IDENTIFIER_REGEXP: 'MY\d+'
 
 # The statuses to show in the orders list.
 # The statuses must be defined in the ORDER_STATUSES_FILEPATH file.
@@ -46,6 +53,16 @@ ORDERS_LIST_STATUSES:
   - accepted
   - processing
   - closed
+
+# University symbols (abbreviations), names and rank in list.
+# Optional, may be set to null.
+UNIVERSITIES_FILEPATH: '{SITE_DIR}/swedish_universities.yaml'
+
+# Country names and codes. Optional, may be set to null.
+COUNTRY_CODES_FILEPATH: '{SITE_DIR}/country_codes.yaml'
+
+# Subject codes, terms in a hierarchy. Optional, may be set to null.
+SUBJECT_TERMS_FILEPATH: '{SITE_DIR}/subjects.yaml'
 
 # Messages; email server info.
 MESSAGE_SENDER_EMAIL: '"OrderPortal Support" <support@my-domain.com>'
