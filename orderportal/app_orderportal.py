@@ -52,6 +52,7 @@ def main():
         url(r'/order/([^/]+).zip', OrderZip, name='order_zip'),
         url(r'/order/([0-9a-f]{32})/logs', OrderLogs, name='order_logs'),
         url(r'/order', OrderCreate, name='order_create'),
+        url(r'/api/v1/order', OrderCreateApiV1, name='order_create_api'),
         url(r'/order/([0-9a-f]{32})/edit', OrderEdit, name='order_edit'),
         url(r'/order/([0-9a-f]{32})/transition/(\w+)',
             OrderTransition, name='order_transition'),
@@ -159,7 +160,8 @@ def main():
             {'path': utils.expand_filepath(settings['SITE_DIR'])},
             name='site'),
         ])
-    handlers.append(url(r'/.*', NoSuchEntity))
+    handlers.append(url(r'/api/v1/(.*)', NoSuchEntityApiV1))
+    handlers.append(url(r'/(.*)', NoSuchEntity))
     application = tornado.web.Application(
         handlers=handlers,
         debug=settings.get('TORNADO_DEBUG', False),
