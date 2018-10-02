@@ -7,7 +7,7 @@ from __future__ import print_function, absolute_import
 import os
 
 
-__version__ = '3.5.6'
+__version__ = '3.6.5'
 
 # Default settings, may be changed in a settings YAML file.
 settings = dict(
@@ -18,17 +18,17 @@ settings = dict(
     LOGGING_FORMAT='%(levelname)s [%(asctime)s] %(message)s',
     DATABASE_SERVER='http://localhost:5984/',
     DATABASE_NAME='orderportal',
-    COUCHDB_HOME='http://couchdb.apache.org/',
-    BOOTSTRAP_HOME='http://getbootstrap.com/',
-    JQUERY_HOME='https://jquery.com/',
-    JQUERY_UI_HOME='https://jqueryui.com/',
-    JQUERY_LOCALTIME_HOME='https://github.com/GregDThomas/jquery-localtime',
-    JQUERY_LOCALTIME_VERSION='0.9.1',  # Must agree with file in ./static
-    DATATABLES_HOME='https://www.datatables.net/',
-    DOCUMENTATION_URL='https://github.com/pekrau/OrderPortal/wiki',
     MARKDOWN_URL='http://daringfireball.net/projects/markdown/syntax',
+    SITE_DIR='{ROOT_DIR}/site',
     SITE_NAME='OrderPortal',
-    SITE_PERSONAL_DATA_POLICY='The data will be used only for activities directly related to this site.',
+    ACCOUNT_MESSAGES_FILEPATH='{SITE_DIR}/account_messages.yaml',
+    ORDER_STATUSES_FILEPATH='{SITE_DIR}/order_statuses.yaml',
+    ORDER_TRANSITIONS_FILEPATH='{SITE_DIR}/order_transitions.yaml',
+    ORDER_MESSAGES_FILEPATH='{SITE_DIR}/order_messages.yaml',
+    UNIVERSITIES_FILEPATH='{SITE_DIR}/swedish_universities.yaml',
+    COUNTRY_CODES_FILEPATH='{SITE_DIR}/country_codes.yaml',
+    SUBJECT_TERMS_FILEPATH='{SITE_DIR}/subject_terms.yaml',
+    TERMINOLOGY=dict(),         # Terms translation lookup.
     MIN_PASSWORD_LENGTH=8,
     LOGIN_MAX_AGE_DAYS=14,
     LOGIN_MAX_FAILURES=6,
@@ -40,25 +40,25 @@ settings = dict(
     DISPLAY_NEWS=True,
     DISPLAY_MAX_NEWS=4,
     DISPLAY_EVENTS=True,
+    DISPLAY_MENU_INFORMATION=True,
+    DISPLAY_MENU_DOCUMENTS=True,
+    DISPLAY_MENU_ABOUT_US=True,
+    ORDER_IDENTIFIER_FORMAT=None,
+    ORDER_IDENTIFIER_REGEXP=None,
+    ORDER_TAGS=True,
     ORDER_USER_TAGS=True,
     ORDER_LINKS=True,
-    ORDER_TABLE_NEW_ROWS=4,
+    ORDER_REPORT=True,
     ORDERS_LIST_TAGS=True,
     ORDERS_LIST_FIELDS=[],
     ORDERS_LIST_STATUSES=[],
     ORDERS_SEARCH_FIELDS=[],
+    ACCOUNT_PI_INFO=True,
+    ACCOUNT_POSTAL_INFO=True,
     ACCOUNT_INVOICE_INFO=True,
     ACCOUNT_FUNDER_INFO=True,
     ACCOUNT_FUNDER_INFO_GENDER=True,
     ACCOUNT_FUNDER_INFO_GROUP_SIZE=True,
     ACCOUNT_FUNDER_INFO_SUBJECT=True,
-    SITE_DIR='{ROOT_DIR}/site',
-    ACCOUNT_MESSAGES_FILEPATH='{SITE_DIR}/account_messages.yaml',
-    ORDER_STATUSES_FILEPATH='{SITE_DIR}/order_statuses.yaml',
-    ORDER_TRANSITIONS_FILEPATH='{SITE_DIR}/order_transitions.yaml',
-    ORDER_MESSAGES_FILEPATH='{SITE_DIR}/order_messages.yaml',
-    UNIVERSITIES_FILEPATH='{SITE_DIR}/swedish_universities.yaml',
-    COUNTRY_CODES_FILEPATH='{SITE_DIR}/country_codes.yaml',
-    SUBJECT_TERMS_FILEPATH='{SITE_DIR}/subject_terms.yaml',
-    GDPR_INFO_URL=None,
+    ACCOUNT_DEFAULT_COUNTRY_CODE='SE',
     )

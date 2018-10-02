@@ -159,6 +159,7 @@ def main():
         url(r'/site/([^/]+)', tornado.web.StaticFileHandler,
             {'path': utils.expand_filepath(settings['SITE_DIR'])},
             name='site'),
+        url(r'/test', Test, name='test'),
         ])
     handlers.append(url(r'/api/v1/(.*)', NoSuchEntityApiV1))
     handlers.append(url(r'/(.*)', NoSuchEntity))
@@ -177,7 +178,7 @@ def main():
         value['href'] = application.reverse_url('site', key + '.png')
     application.listen(settings['PORT'], xheaders=True)
     pid = os.getpid()
-    logging.info("web server PID %s on port %s", pid, settings['PORT'])
+    logging.info("web server %s (PID %s)", settings['BASE_URL'], pid)
     if options.pidfile:
         with open(options.pidfile, 'w') as pf:
             pf.write(str(pid))

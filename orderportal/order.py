@@ -50,7 +50,7 @@ class OrderSaver(saver.Saver):
         "Create the order from the given form."
         self.fields = Fields(form)
         self['form'] = form['_id']
-        self['title'] = title or form['title']
+        self['title'] = title
         self['fields'] = dict([(f['identifier'], None) for f in self.fields])
         self.set_status(settings['ORDER_STATUS_INITIAL']['identifier'])
         # Set the order identifier if its format defined.
@@ -58,6 +58,7 @@ class OrderSaver(saver.Saver):
         if form['status'] in (constants.ENABLED, constants.DISABLED):
             try:
                 fmt = settings['ORDER_IDENTIFIER_FORMAT']
+                if not fmt: raise KeyError
             except KeyError:    # No identifier; sequential counter not used
                 pass
             else:               # Identifier; sequential counter is used
@@ -232,26 +233,62 @@ class OrderSaver(saver.Saver):
                     # This is a special case for HTML form input.
                     value = self.rqh.get_arguments(identifier)
             elif field['type'] == constants.TABLE:
-                if data:        # JSON data: complete table.
+                coldefs = [utils.parse_field_table_column(c) 
+                           for c in field['table']]
+                n_columns = len(coldefs)
+                if n_columns == 0: continue
+                if data:        # JSON data: contains complete table.
                     try:
                         value = data[identifier]
                     except KeyError:
                         continue
+                    # Check validity of table items.
+                    try:
+                        table = value
+                        value = []
+                        for row in table:
+                            for j in xrange(n_columns):
+                                coltype = coldefs[j].get('type')
+                                if coltype == constants.SELECT:
+                                    if row[j] not in coldefs[j]['options']:
+                                        row[j] = None
+                                elif coltype == constants.INT:
+                                    try:
+                                        row[j] = int(row[j])
+                                    except (ValueError, TypeError):
+                                        row[j] = None
+                                elif not row[j]:
+                                    row[j] = None
+                    except (ValueError, TypeError, AttributeError):
+                        value = []
                 else:         # HTML form input: individual cells.
-                    value = self.doc['fields'].get(identifier) or []
-                    for i, row in enumerate(value):
-                        for j, item in enumerate(row):
-                            key = "cell_{0}_{1}".format(i, j)
-                            value[i][j] = self.rqh.get_argument(key, '')
-                    offset = len(value)
-                    for i in xrange(settings['ORDER_TABLE_NEW_ROWS']):
+                    try:
+                        name = "_table_%s_count" % identifier
+                        n_rows = int(self.rqh.get_argument(name, 0))
+                    except (ValueError, TypeError):
+                        n_rows = 0
+                    value = []
+                    for i in xrange(n_rows):
                         row = []
-                        for j in xrange(len(field['table'])):
-                            key = "cell_{0}_{1}".format(i+offset, j)
-                            row.append(self.rqh.get_argument(key, ''))
-                        value.append(row)
-                    # Remove empty rows.
-                    value = [r for r in value if reduce(lambda x,y: x or y, r)]
+                        for j in xrange(n_columns):
+                            name = "_table_%s_%i_%i" % (identifier, i, j)
+                            item = self.rqh.get_argument(name, None)
+                            coltype = coldefs[j].get('type')
+                            if coltype == constants.SELECT:
+                                if item not in coldefs[j]['options']:
+                                    item = None
+                            elif coltype == constants.INT:
+                                try:
+                                    item = int(item)
+                                except (ValueError, TypeError):
+                                    item = None
+                            elif not item:
+                                item = None
+                            row.append(item)
+                        for item in row:
+                            if item is not None:
+                                value.append(row)
+                                break
             elif data:          # JSON data.
                 try:
                     value = data[identifier]
@@ -475,7 +512,9 @@ class OrderMixin(object):
         """Get the order for the identifier or IUID.
         Raise ValueError if no such order."""
         try:
-            match = re.match(settings['ORDER_IDENTIFIER_REGEXP'], iuid)
+            regexp = settings['ORDER_IDENTIFIER_REGEXP']
+            if not regexp: raise KeyError
+            match = re.match(regexp, iuid)
             if not match: raise KeyError
         except KeyError:
             try:
@@ -578,6 +617,7 @@ class OrderMixin(object):
             item['restrict_write'] = field['restrict_write']
             item['invalid'] = order['invalid'].get(field['identifier'])
             item['description'] = field.get('description')
+            item._field = field
             result.append(item)
             if field['type'] == constants.GROUP:
                 result.extend(self.get_fields(order, depth+1, field['fields']))
@@ -841,7 +881,7 @@ class OrderCsv(OrderMixin, RequestHandler):
             raise tornado.web.HTTPError(403, reason=str(msg))
         self.write(self.get_order_csv_stringio(order).getvalue())
         self.set_header('Content-Type', constants.CSV_MIME)
-        filename = utils.to_ascii(order.get('identifier')) or order['_id']
+        filename = utils.to_ascii(order.get('identifier') or order['_id'])
         self.set_header('Content-Disposition',
                         'attachment; filename="%s.csv"' % filename)
 
@@ -857,7 +897,7 @@ class OrderCsv(OrderMixin, RequestHandler):
             writer.writerow(safe(('Identifier', order['identifier'])))
         except KeyError:
             pass
-        writer.writerow(safe(('Title', order.get('title') or '[no title]')))
+        writer.writerow(safe(('Title', order['title'] or '[no title]')))
         writer.writerow(safe(('URL', self.order_reverse_url(order))))
         writer.writerow(safe(('IUID', order['_id'])))
         writer.writerow(safe(('Form', 'Title', form['title'])))
@@ -893,7 +933,18 @@ class OrderCsv(OrderMixin, RequestHandler):
                               'Restrict read', 'Restrict write',
                               'Invalid', 'Description')))
         for field in self.get_fields(order):
-            writer.writerow(safe(field.values()))
+            # Special case for table field; spans more than one row
+            if field['type'] == constants.TABLE:
+                values = field.values()
+                table = values[4] # Column for 'Value'
+                values[4] = len(table) # Number of rows in table
+                values += [h.split(';')[0] for h in field._field['table']]
+                writer.writerow(safe(values))
+                prefix = [''] * 9
+                for row in table:
+                    writer.writerow(safe(prefix + row))
+            else:
+                writer.writerow(safe(field.values()))
         writer.writerow(safe(('',)))
         writer.writerow(safe(('File', 'Size', 'Content type', 'URL')))
         for filename in sorted(order.get('_attachments', [])):
@@ -1118,7 +1169,7 @@ class OrdersCsv(Orders):
         forms = self.get_forms_titles(all=True)
         for order in self.get_orders():
             row = [order.get('identifier') or '',
-                   utils.to_utf8(order.get('title') or '[no title]'),
+                   utils.to_utf8(order['title'] or '[no title]'),
                    order['_id'],
                    self.order_reverse_url(order),
                    utils.to_utf8(forms[order['form']]),
@@ -1157,7 +1208,7 @@ class OrderLogs(OrderMixin, RequestHandler):
             self.see_other('home', error=str(msg))
             return
         title = u"Logs for {0} '{1}'".format(utils.terminology('order'),
-                                             order['title'])
+                                             order['title'] or '[no title]')
         self.render('logs.html',
                     title=title,
                     entity=order,
@@ -1187,7 +1238,7 @@ class OrderCreate(OrderMixin, RequestHandler):
             self.check_creation_enabled()
             form = self.get_form(self.get_argument('form'), check=True)
             with OrderSaver(rqh=self) as saver:
-                saver.create(form, title=self.get_argument('title', None))
+                saver.create(form)
                 saver.autopopulate()
                 saver.check_fields_validity()
         except ValueError, msg:
@@ -1248,16 +1299,48 @@ class OrderEdit(OrderMixin, RequestHandler):
         #     Too much effort; leave as is for the time being.
         hidden_fields = set([f['identifier'] for f in fields.flatten()
                              if f['type'] != 'multiselect'])
+        # For each table input field, create code for use in bespoke JavaScript
+        tableinputs = {}
+        for field in fields.flatten():
+            if field['type'] != 'table': continue
+            tableinput = ["<tr>"
+                          "<td id='rowid__' class='table-input-row-0'></td>"]
+            for i, coldef in enumerate(field['table']):
+                column = utils.parse_field_table_column(coldef)
+                rowid = "rowid_%s" % i
+                if column['type'] == constants.SELECT:
+                    inp = ["<select class='form-control' name='%s' id='%s'>"
+                           % (rowid, rowid)]
+                    inp.extend(["<option>%s</option>" % o
+                                for o in column['options']])
+                    inp = ''.join(inp)
+                elif column['type'] == constants.INT:
+                    inp = "<input type='number' step='1' class='form-control'"\
+                          " name='%s' id='%s'>" % (rowid, rowid)
+                elif column['type'] == constants.FLOAT:
+                    inp = "<input type='number' step='%s'" \
+                          " class='form-control' name='%s' id='%s'>" % \
+                          (constants.FLOAT_STEP, rowid, rowid)
+                elif column['type'] == constants.DATE:
+                    inp = "<input type='text' class='form-control datepicker'" \
+                          " name='%s' id='%s'>" % (rowid, rowid)
+                else:           # Default type: 'string'
+                    inp = "<input type='text' class='form-control'" \
+                          " name='%s' id='%s'>" % (rowid, rowid)
+                tableinput.append("<td>%s</td>" % inp)
+            tableinput.append("</tr>")
+            tableinputs[field['identifier']] = ''.join(tableinput)
         self.render('order_edit.html',
                     title=u"Edit {0} '{1}'".format(utils.terminology('order'),
-                                                   order['title']),
+                                                   order['title'] or '[no title]'),
                     order=order,
                     tags=tags,
                     links=links,
                     colleagues=colleagues,
                     form=form,
                     fields=form['fields'],
-                    hidden_fields=hidden_fields)
+                    hidden_fields=hidden_fields,
+                    tableinputs=tableinputs)
 
     @tornado.web.authenticated
     def post(self, iuid):
@@ -1272,7 +1355,7 @@ class OrderEdit(OrderMixin, RequestHandler):
             message = "{0} saved.".format(utils.terminology('Order'))
             error = None
             with OrderSaver(doc=order, rqh=self) as saver:
-                saver['title'] = self.get_argument('__title__', None) or '[no title]'
+                saver['title'] = self.get_argument('__title__', None)
                 saver.set_tags(self.get_argument('__tags__', '').\
                                replace(',', ' ').split())
                 saver.set_external(self.get_argument('__links__', '').\
@@ -1324,7 +1407,8 @@ class OrderClone(OrderMixin, RequestHandler):
         form = self.get_form(order['form'])
         erased_files = set()
         with OrderSaver(rqh=self) as saver:
-            saver.create(form, title=u"Clone of {0}".format(order['title']))
+            saver.create(form, title=u"Clone of {0}".format(
+                order['title'] or '[no title]'))
             for field in saver.fields:
                 id = field['identifier']
                 if field.get('erase_on_clone'):

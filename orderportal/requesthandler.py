@@ -9,6 +9,7 @@ import traceback
 import urllib
 
 import couchdb
+import markdown
 import tornado.web
 
 import orderportal
@@ -47,7 +48,12 @@ class RequestHandler(tornado.web.RequestHandler):
         result['message'] = self.get_cookie('message', '').replace('_', ' ')
         self.clear_cookie('message')
         result['infos'] = [r.value for r in self.db.view('info/menu')]
-        result['texts'] = [r.key for r in self.db.view('text/name')]
+        try:
+            doc = self.get_entity_view('text/name', 'alert')
+        except tornado.web.HTTPError:
+            result['alert'] = None
+        else:
+            result['alert'] = markdown.markdown(doc['text'], output_format='html5')
         return result
 
     def see_other(self, name, *args, **kwargs):
@@ -139,7 +145,7 @@ class RequestHandler(tornado.web.RequestHandler):
         account = self.get_account(email)
         # Check if login session is invalidated.
         if account.get('login') is None: raise ValueError
-        logging.info("Session login: account %s", account['email'])
+        logging.info("Session authentication: %s", account['email'])
         return account
 
     def get_current_user_basic(self):

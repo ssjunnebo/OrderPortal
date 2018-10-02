@@ -271,17 +271,22 @@ def convert(type, value):
         return value
 
 def csv_safe_row(row):
-    """Remove any beginning character '=-+@' from string values to output.
+    "Make all values in the row safe for CSV. See 'csv_safe'."
+    row = list(row)
+    for pos, value in enumerate(row):
+        row[pos] = csv_safe(value)
+    return row
+
+def csv_safe(value):
+    """Remove any beginning character '=-+@' from string value.
     Also convert to UTF-8.
     See http://georgemauer.net/2017/10/07/csv-injection.html
     """
-    row = list(row)
-    for pos, value in enumerate(row):
-        if not isinstance(value, basestring): continue
+    if isinstance(value, basestring):
         while len(value) and value[0] in '=-+@':
             value = value[1:]
-        row[pos] = to_utf8(value)
-    return row
+        value = to_utf8(value)
+    return value
 
 def get_json(id, type):
     "Return the initialized JSON dictionary with id and type."
@@ -352,3 +357,16 @@ def get_filename_extension(content_type):
     if content_type == 'image/jpeg':
         return '.jpg'
     return mimetypes.guess_extension(content_type)
+
+def parse_field_table_column(coldef):
+    """Parse the input field table column definition.
+    Return dictionary with identifier, type and options (if any).
+    """
+    parts = [p.strip() for p in coldef.split(';')]
+    if len(parts) == 1:
+        return {'identifier': coldef, 'type': 'string'}
+    else:
+        result = {'identifier': parts[0], 'type': parts[1]}
+        if result['type'] == 'select':
+            result['options'] = parts[2].split('|')
+        return result

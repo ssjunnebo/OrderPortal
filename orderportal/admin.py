@@ -57,7 +57,7 @@ class Settings(RequestHandler):
         params = ['ROOT_DIR', 'SETTINGS_FILEPATH',
                   'BASE_URL', 'SITE_NAME', 'SITE_SUPPORT_EMAIL',
                   'DATABASE_SERVER', 'DATABASE_NAME', 'DATABASE_ACCOUNT',
-                  'TORNADO_DEBUG', 'LOGGING_DEBUG',
+                  'TORNADO_DEBUG', 'LOGGING_DEBUG', 'BACKUP_DIR',
                   'LOGIN_MAX_AGE_DAYS', 'LOGIN_MAX_FAILURES',
                   'SITE_DIR', 'ACCOUNT_MESSAGES_FILEPATH',
                   'ORDER_STATUSES_FILEPATH', 'ORDER_TRANSITIONS_FILEPATH',
@@ -83,7 +83,7 @@ class Text(RequestHandler):
             text = self.get_entity_view('text/name', name)
         except tornado.web.HTTPError:
             text = dict(name=name)
-        origin = self.get_argument('origin', self.absolute_reverse_url('texts'))
+        origin = self.get_argument('origin',self.absolute_reverse_url('texts'))
         self.render('text.html', text=text, origin=origin)
 
     @tornado.web.authenticated
@@ -119,7 +119,7 @@ class OrderStatuses(RequestHandler):
                             startkey=[''],
                             endkey=[constants.CEILING])
         counts = dict([(r.key[0], r.value) for r in view])
-        self.render('order_statuses.html', counts=counts)
+        self.render('admin_order_statuses.html', counts=counts)
 
 
 class AdminOrderMessages(RequestHandler):

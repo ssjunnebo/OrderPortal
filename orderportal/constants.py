@@ -10,7 +10,6 @@ NAME_RX  = re.compile(r'^[^/]+$')
 IUID_RX  = re.compile(r'^[0-9a-f]{32}$')
 DATE_RX  = re.compile(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') # Safe until 9999 CE...
 EMAIL_RX = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
-VERSION_RX = re.compile(r'\d+\.\d+\.\d+')
 
 # Content types (MIME types)
 HTML_MIME = 'text/html'
@@ -63,8 +62,10 @@ TABLE   = 'table'
 ### FILE    = 'file'
 TYPES = [STRING, EMAIL, INT, FLOAT, BOOLEAN, URL, SELECT, MULTISELECT,
          TEXT, DATE, TABLE, FILE, GROUP]
-TYPE_LABELS = {INT: 'integer'}
-TYPE_HTML = {STRING: 'text', INT: 'number', EMAIL: 'email'}
+TYPE_HTML = {STRING: 'text', INT: 'number', DATE: 'date', 
+             EMAIL: 'email', URL: 'url'}
+# Step for use with input type 'float'
+FLOAT_STEP = '0.0000001'
 
 # Texts for use in web site
 TEXTS = dict(header='Header on portal home page.',
@@ -72,10 +73,11 @@ TEXTS = dict(header='Header on portal home page.',
              registered='Page after registration.',
              reset='Password reset page.',
              password='Password setting page.',
-             help_datatypes='Page explaining available data types.',
              general='General information on portal home page.',
              contact='Contact page.',
-             about='About page.')
+             about='About page.',
+             alert='Alert text at the top of every page.',
+             privacy_policy='Privacy policy statement; GDPR, etc.')
 
 # Boolean string values
 TRUE  = frozenset(['true', 'yes', 't', 'y', '1'])

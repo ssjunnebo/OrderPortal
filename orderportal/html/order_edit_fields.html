@@ -198,51 +198,43 @@
     {% elif field['type'] == constants.DATE %}
     {# This requires jQuery datepicker! Loaded in calling HTML template. #}
     <input type="text"
-	   class="datepicker form-control visible-if-source"
+	   class="form-control datepicker visible-if-source"
 	   name="{{ field['identifier'] }}"
 	   id="{{ field['identifier'] }}"
 	   value="{{ value }}">
 
     {% elif field['type'] == constants.TABLE %}
-    <table class="table table-bordered table-condensed">
-      <tr>
-	<th></th>
-	{% for identifier in field['table'] %}
-	<th>{{ identifier }}</th>
-	{% end %}
-      </tr>
-      {% if value %}
-      {% for i, row in enumerate(value) %}
-      <tr>
-	<td class="number">{{ i + 1 }}</td>
-	{% for j, item in enumerate(row) %}
-	<td>
-	  <input type="text"
-		 class="form-control"
-		 name="cell_{{ i }}_{{ j }}"
-		 value="{{ item }}">
-	</td>
-	{% end %}
-      </tr>
-      {% end %}
-      {% set offset = i + 1 %}
-      {% else %}
-      {% set offset = 0 %}
-      {% end %}
-      {% for i in xrange(offset, offset + settings['ORDER_TABLE_NEW_ROWS']) %}
-      <tr>
-	<td class="number">{{ i + 1 }}</td>
-	{% for j, item in enumerate(field['table']) %}
-	<td>
-	  <input type="text"
-		 class="form-control"
-		 name="cell_{{ i }}_{{ j }}">
-	</td>
-	{% end %}
-      </tr>
+    <input type="hidden"
+           name="_table_{{ field['identifier'] }}_count"
+           id="_table_{{ field['identifier'] }}_count"
+           value="{{ value and len(value) or 0 }}">
+    {% set ncols = len(field['table']) %}
+    {% if ncols > 5 %}
+    <div class="table-scrolling-wrapper">
+      <table id="_table_{{ field['identifier'] }}"
+             style="max-width:{{ 180*ncols }}px; width:{{ 180*ncols }}px"
+             class="table table-bordered table-condensed table-scrolling">
+        {% module TableRowsEdit(field, value) %}
+      </table>
 
-      {% end %}
+    </div>
+    <div>
+      <b>MacOS users:</b>
+      Scroll table horizontally using left/right arrow keys. Or try
+      <a target="_blank" href="https://www.quora.com/Why-is-the-scroll-bar-missing-in-Safari">this</a>.
+    </div>
+    {% else %}
+    <table id="_table_{{ field['identifier'] }}"
+           class="table table-bordered table-condensed">
+      {% module TableRowsEdit(field, value) %}
     </table>
+    {% end %}
+    <div class="form-group">
+      <button type="button" id="_table_{{ field['identifier'] }}_add_button" 
+              class="btn btn-info"> 
+        Add row
+      </button>
+    </div>
 
     {% elif field['type'] == constants.FILE %}
     <input type="file"
@@ -253,15 +245,19 @@
       Currently loaded file: {{ value }}
       {% end %}
 
-    {% else %} {# All other field types: STRING, EMAIL, INT, FLOAT, URL #}
-    {% if value is None %}
-    {% set value = '' %}
-    {% end %}
+    {% elif field['type'] == constants.FLOAT %}
+    <input type="number" step="{{ constants.FLOAT_STEP }}"
+	   class="form-control visible-if-source"
+	   name="{{ field['identifier'] }}"
+	   id="{{ field['identifier'] }}"
+	   value="{{ '' if value is None else value  }}">
+
+    {% else %} {# All other field types: STRING, EMAIL, INT, URL #}
     <input type="{{ constants.TYPE_HTML.get(field['type'], 'text') }}"
 	   class="form-control visible-if-source"
 	   name="{{ field['identifier'] }}"
 	   id="{{ field['identifier'] }}"
-	   value="{{ value }}">
+	   value="{{ '' if value is None else value  }}">
     {% end %} {# elif field['type'] == #}
     
     {% if field['required'] %}
@@ -302,6 +298,10 @@
 
     <span class="help-block">
       {% module Markdown(field.get('description')) %}
+      {% if field['type'] == constants.TEXT %}
+      <a href="{{ settings['MARKDOWN_URL'] }}" target="_blank">Markdown</a>
+      notation may be used.
+      {% end %}
     </span>
   </div>
 </div>

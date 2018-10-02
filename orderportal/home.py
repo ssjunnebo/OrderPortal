@@ -115,31 +115,30 @@ class Software(RequestHandler):
     "Display software information for the web site."
 
     def get(self):
-        search = constants.VERSION_RX.search
-        versions = dict(
-            python=[('CouchDB-Python', couchdb.__version__),
-                    ('tornado', tornado.version),
-                    ('PyYAML', yaml.__version__),
-                    ('markdown', markdown.version)],
-            other=[('<a href="{0}">CouchDB</a>'.format(settings['COUCHDB_HOME']),
-                    utils.get_dbserver().version()),
-                   ('<a href="{0}">bootstrap</a>'.format(
-                        settings['BOOTSTRAP_HOME']),
-                    search(settings['BOOTSTRAP_CSS_URL']).group()),
-                   ('<a href="{0}">jQuery</a>'.format(settings['JQUERY_HOME']),
-                    search(settings['JQUERY_URL']).group()),
-                   ('<a href="{0}">jQuery UI</a>'.format(
-                        settings['JQUERY_UI_HOME']),
-                    search(settings['JQUERY_UI_URL']).group()),
-                   ('<a href="{0}">jQuery localtime</a>'.format(
-                        settings['JQUERY_LOCALTIME_HOME']),
-                    search(settings['JQUERY_LOCALTIME_VERSION']).group()),
-                   ('<a href="{0}">jQuery DataTables</a>'.format(
-                        settings['DATATABLES_HOME']),
-                    search(settings['DATATABLES_CSS_URL']).group())])
+        info = [
+            ('CouchDB server', 'http://couchdb.apache.org/',
+             utils.get_dbserver().version(), 'installed'),
+            ('CouchDB-Python', 'https://pypi.org/project/CouchDB/',
+             couchdb.__version__, 'installed'),
+            ('tornado', 'https://pypi.org/project/tornado/',
+             tornado.version, 'installed'),
+            ('PyYAML', 'https://pypi.org/project/PyYAML/',
+             yaml.__version__, 'installed'),
+            ('markdown', 'https://pypi.org/project/Markdown/',
+             markdown.version, 'installed'),
+            ('bootstrap', 'https://getbootstrap.com/docs/3.3/', 
+             '3.3.7', 'CDN'),
+            ('jQuery', 'https://jquery.com/', '1.12.4', 'CDN'),
+            ('jQuery-UI', 'https://jqueryui.com/', '1.11.4', 'CDN'),
+            ('jQuery localtime', 
+             'https://github.com/GregDThomas/jquery-localtime',
+             '0.9.1', 'in distro'),
+            ('jQuery DataTables', 'https://www.datatables.net/',
+             '1.10.11', 'CDN')
+            ]
         self.render('software.html',
                     version=orderportal.__version__,
-                    versions=versions)
+                    info=info)
 
 
 class Log(RequestHandler):
@@ -196,3 +195,30 @@ class NoSuchEntityApiV1(RequestHandler):
     def check_xsrf_cookie(self):
         "Do not check for XSRF cookie when API."
         pass
+
+
+class Test(RequestHandler):
+    "Page to test some feature."
+
+    @tornado.web.authenticated
+    def get(self):
+        rowcode = ["<tr>"]
+        rowcode.append(
+            "<td>"
+            "<input type='text' class='form-control' name='rowid_0' id='rowid_0'>"
+            "</td>")
+        rowcode.append(
+            "<td>"
+            "<input type='text' class='form-control' name='rowid_1'>"
+            "</td>")
+        rowcode.append("</tr>")
+        self.render('test.html', rowcode=''.join(rowcode))
+
+    @tornado.web.authenticated
+    def post(self):
+        table_count = int(self.get_argument("table_count"))
+        logging.debug("table_count %s", table_count);
+        for i in xrange(table_count):
+            logging.debug("%s: %s",
+                          i, self.get_argument("table_%s_0" % i, None))
+        self.see_other('test')

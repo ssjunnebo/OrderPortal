@@ -8,10 +8,7 @@
 <div class="container-fluid">
 {% end %}
 
-{% block body_title %}
-{% module Icon('form', label=True) %}:
-{{ form['title'] }}
-{% end %}
+{% block body_title %}Form: {{ form['title'] }}{% end %}
 
 {% block body_header_alt_format %}
 <a href="{{ reverse_url('form_api', form['_id']) }}">
@@ -49,7 +46,8 @@
 <p>
   <form action="{{ reverse_url('order_create') }}"
 	role="form"
-	method="GET">
+	method="POST">
+    {% module xsrf_form_html() %}
     <input type="hidden" name="form" value="{{ form['_id'] }}">
     <button type="submit" class="btn btn-success">
       <span class="glyphicon glyphicon-plus"></span>
@@ -73,7 +71,8 @@
 <p>
   <form action="{{ reverse_url('order_create') }}"
 	role="form"
-	method="GET">
+	method="POST">
+    {% module xsrf_form_html() %}
     <input type="hidden" name="form" value="{{ form['_id'] }}">
     <button type="submit" class="btn btn-success">
       <span class="glyphicon glyphicon-plus"></span>
@@ -137,12 +136,16 @@
     </form>
     <table class="table-condensed table-fields">
       <tr>
+	<th>Version</th>
+	<td>{{ form.get('version') or '-' }}</td>
+      </tr>
+      <tr>
 	<th>Description</th>
 	<td>{% module Markdown(form.get('description')) %}</td>
       </tr>
       <tr>
-	<th>Version</th>
-	<td>{{ form.get('version') or '-' }}</td>
+	<th>Instruction</th>
+	<td>{% module Markdown(form.get('instruction')) %}</td>
       </tr>
       <tr>
 	<th>{{ terminology('Orders') }}</th>

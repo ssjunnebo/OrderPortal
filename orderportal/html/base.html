@@ -6,10 +6,11 @@
     <title>{% block head_title %}{{ settings['SITE_NAME'] }}{% end %}</title>
     <link rel="shortcut icon" type="image/png"
 	  href="{{ reverse_url('site', settings['SITE_FAVICON']) }}">
+    {# Versions here and in home.py must be kept in sync! #}
     <link rel="stylesheet" type="text/css"
 	  href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
     <link rel="stylesheet" type="text/css"
-	  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css"
 	  href="https://cdn.datatables.net/1.10.11/css/dataTables.bootstrap.min.css">
     <link rel="stylesheet" href="{{ static_url('mods.css') }}">
@@ -17,14 +18,13 @@
     <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
     <script src="{{ static_url('jquery.localtime-0.9.1.min.js') }}"></script>
-    <script defer src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script defer src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script defer src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
     <script defer src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js"></script>
     <script>
       $.datepicker.setDefaults({dateFormat: "yy-mm-dd"});
       $(function(){ $(".datepicker").datepicker(); });
     </script>
-
   </head>
 
   <body>
@@ -101,6 +101,7 @@
 	    </li>
 	    {% end %} {# if is_staff #}
 
+            {% if settings['DISPLAY_MENU_INFORMATION'] %}
             <li class="dropdown">
               <a class="dropdown-toggle" data-toggle="dropdown" href="#">
 		Information
@@ -121,10 +122,13 @@
 		{% end %}
               </ul>
             </li>
+            {% end %}
 
+            {% if settings['DISPLAY_MENU_DOCUMENTS'] %}
 	    <li>
 	      <a href="{{ reverse_url('files') }}">Documents</a>
 	    </li>
+            {% end %}
 
 	    {% if is_admin %}
             <li class="dropdown">
@@ -142,10 +146,12 @@
 		  <a href="{{ reverse_url('texts') }}">Texts</a>
 		</li>
 		<li>
-		  <a href="{{ reverse_url('order_statuses') }}">Order statuses</a>
+		  <a href="{{ reverse_url('order_statuses') }}">
+                    {{ terminology('Order') }} statuses</a>
 		</li>
 		<li>
-		  <a href="{{ reverse_url('admin_order_messages') }}">Order messages</a>
+		  <a href="{{ reverse_url('admin_order_messages') }}">
+                    {{ terminology('Order') }} messages</a>
 		</li>
 		<li>
 		  <a href="{{ reverse_url('admin_account_messages') }}">Account messages</a>
@@ -169,9 +175,11 @@
 	    <li>
 	      <a href="{{ reverse_url('contact') }}">Contact</a>
 	    </li>
+            {% if settings['DISPLAY_MENU_ABOUT_US'] %}
 	    <li>
 	      <a href="{{ reverse_url('about') }}">About us</a>
 	    </li>
+            {% end %}
 
 	  </ul>
 
@@ -203,7 +211,7 @@
 		  <div class="form-group has-feedback">
 		    <input type="search" id="term" name="term"
 			   class="form-control"
-			   placeholder="Search orders">
+			   placeholder="Search {{ terminology('orders') }}">
 		    <span class="glyphicon glyphicon-search form-control-feedback"></span>
 		  </div>
 		</form>
@@ -219,6 +227,21 @@
     {% block container %}
     <div class="container">
     {% end %}
+
+      {% if alert %}
+      <div class="row">
+	<div class="col-md-12 lead alert alert-danger">
+          {% if is_admin %}
+          <a href="{{ reverse_url('text','alert',origin=reverse_url('home')) }}"
+	     class="btn btn-primary btn-xs pull-right" role="button">
+	    <span class="glyphicon glyphicon-edit"></span>
+	    Edit
+          </a>
+          {% end %}
+	  {% raw alert %}
+	</div>
+      </div>
+      {% end %} {# if alert #}
 
       <div class="row">
 	<div class="col-md-12">
@@ -238,7 +261,6 @@
       </div>
       {% end %} {# block body_header #}
 
-      {% try %}
       {% if error %}
       <div class="row">
 	<div class="col-md-12 lead alert alert-danger">
@@ -246,10 +268,7 @@
 	</div>
       </div>
       {% end %} {# if error #}
-      {% except NameError %}
-      {% end %} {# try #}
 
-      {% try %}
       {% if message %}
       <div class="row">
 	<div class="col-md-12 lead alert alert-warning">
@@ -258,8 +277,6 @@
 	</div>
       </div>
       {% end %} {# if message #}
-      {% except NameError %}
-      {% end %} {# try #}
 
       {% block content %}
       <div class="row">
@@ -289,7 +306,7 @@
 	</div>
         <div class="col-md-8 text-center">
           {% if current_user %}
-          GDPR information: See
+          Privacy policy (GDPR, etc): See
           <a href="{{ reverse_url('account', current_user['email']) }}">
             your account page</a>.
           A cookie is used solely to handle your login session.
@@ -299,7 +316,7 @@
         </div>
 	<div class="col-md-2">
 	  <a class="pull-right" href="{{ reverse_url('software') }}">
-	    OrderPortal version {{ version }}
+	    Software version {{ version }}
 	  </a>
 	</div>
       </div>
