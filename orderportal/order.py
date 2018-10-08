@@ -392,10 +392,12 @@ class OrderSaver(saver.Saver):
                         raise ValueError('value is not a valid date')
                 elif field['type'] == constants.TABLE:
                     if not isinstance(value, list):
-                        raise ValueError('value is not a list')
+                        raise ValueError('table value is not a list')
+                    if field['required'] and len(value) == 0:
+                        raise ValueError('missing data')
                     for r in value:
                         if not isinstance(r, list):
-                            raise ValueError('value is not a list of lists')
+                            raise ValueError('table value is not a list of lists')
                 elif field['type'] == constants.FILE:
                     pass
         except ValueError, msg:
@@ -1006,8 +1008,10 @@ class Orders(RequestHandler):
         else:
             all_count = count=r.value
         # Initial ordering by the 'modified' column.
-        order_column = 5 + len(settings['ORDERS_LIST_STATUSES']) + \
-            len(settings['ORDERS_LIST_FIELDS'])
+        order_column = 5 + \
+                       int(settings['ORDERS_LIST_TAGS']) + \
+                       len(settings['ORDERS_LIST_FIELDS']) + \
+                       len(settings['ORDERS_LIST_STATUSES'])
         self.set_filter()
         self.render('orders.html',
                     all_forms=self.get_forms_titles(all=True),
