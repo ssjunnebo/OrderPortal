@@ -62,11 +62,15 @@ def load_settings(filepath):
     except KeyError:
         pass
     try:
-        kwargs['filename'] = settings['LOGGING_FILEPATH']
+        filepath = settings['LOGGING_FILEPATH']
+        if not filepath: raise KeyError
+        kwargs['filename'] = filepath
     except KeyError:
         pass
     try:
-        kwargs['filemode'] = settings['LOGGING_FILEMODE']
+        filemode = settings['LOGGING_FILEMODE']
+        if not filemode: raise KeyError
+        kwargs['filemode'] = filemode
     except KeyError:
         pass
     logging.basicConfig(**kwargs)
@@ -98,6 +102,13 @@ def load_settings(filepath):
         settings['ACCOUNT_MESSAGES'][constants.RESET]['recipients'] = ['account']
     except KeyError:
         raise ValueError('Account messages file: missing message for status')
+    # Check valid order identifier format; prefix all upper case characters
+    if settings['ORDER_IDENTIFIER_FORMAT']:
+        for c in settings['ORDER_IDENTIFIER_FORMAT']:
+            if not c.isalpha(): break
+            if not c.isupper():
+                raise ValueError('ORDER_IDENTIFIER_FORMAT prefix must be'
+                                 ' all upper-case characters')
     # Read order statuses definitions YAML file.
     logging.info("order statuses: %s", settings['ORDER_STATUSES_FILEPATH'])
     with open(expand_filepath(settings['ORDER_STATUSES_FILEPATH'])) as infile:

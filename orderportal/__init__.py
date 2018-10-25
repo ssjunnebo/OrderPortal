@@ -7,7 +7,7 @@ from __future__ import print_function, absolute_import
 import os
 
 
-__version__ = '3.6.8'
+__version__ = '3.6.14'
 
 # Default settings, may be changed in a settings YAML file.
 settings = dict(
@@ -16,6 +16,8 @@ settings = dict(
     TORNADO_DEBUG=False,
     LOGGING_DEBUG=False,
     LOGGING_FORMAT='%(levelname)s [%(asctime)s] %(message)s',
+    LOGGING_FILEPATH=None,
+    LOGGING_FILEMODE=None,
     DATABASE_SERVER='http://localhost:5984/',
     DATABASE_NAME='orderportal',
     MARKDOWN_URL='http://agea.github.io/tutorial.md/',
