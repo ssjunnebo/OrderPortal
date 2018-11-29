@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python2
 "OrderPortal web application server."
 
 from __future__ import print_function, absolute_import
@@ -32,6 +32,7 @@ def main():
     parser = utils.get_command_line_parser(description='OrderPortal server.')
     (options, args) = parser.parse_args()
     utils.load_settings(filepath=options.settings)
+    utils.initialize()
 
     url = tornado.web.url
     handlers = [url(r'/', Home, name='home')]
@@ -49,6 +50,7 @@ def main():
         url(r'/order/([0-9a-f]{32})', Order, name='order'),
         url(r'/api/v1/order/([0-9a-f]{32})', OrderApiV1, name='order_api'),
         url(r'/order/([^/]+).csv', OrderCsv, name='order_csv'),
+        url(r'/order/([^/]+).xlsx', OrderXlsx, name='order_xlsx'),
         url(r'/order/([^/]+).zip', OrderZip, name='order_zip'),
         url(r'/order/([0-9a-f]{32})/logs', OrderLogs, name='order_logs'),
         url(r'/order', OrderCreate, name='order_create'),

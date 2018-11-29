@@ -3,7 +3,9 @@ backports-abc==0.5
 certifi==2018.10.15
 chardet==3.0.4
 CouchDB==1.1
+et-xmlfile==1.0.1
 idna==2.7
+jdcal==1.4
 Markdown==2.6.8
 packaging==16.8
 pyparsing==2.2.0
@@ -13,3 +15,4 @@ singledispatch==3.4.0.3
 six==1.10.0
 tornado==4.4.3
 urllib3==1.24
+XlsxWriter==1.1.2
