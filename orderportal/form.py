@@ -535,12 +535,11 @@ class FormOrdersAggregate(RequestHandler):
 
         file_format = self.get_argument('file_format', 'xlsx').lower()
         if file_format == 'xlsx':
-            writer = utils.XlsxWriter()
+            writer = utils.XlsxWriter('Aggregate')
         elif file_format == 'csv':
             writer = utils.CsvWriter()
         else:
             raise tornado.web.HTTPError(404, reason='unknown file format')
-        writer.create_worksheet('Aggregate')
         header = [self.TITLES.get(f, f.capitalize()) for f in order_fields]
         header.extend(history_fields)
         header.extend([self.TITLES.get(f,f.capitalize()) for f in owner_fields])
@@ -559,6 +558,13 @@ class FormOrdersAggregate(RequestHandler):
                             startkey=[iuid, constants.CEILING],
                             endkey=[iuid])
         orders = [r.doc for r in view]
+
+        # Filter by statuses, if any given
+        statuses = self.get_arguments('status')
+        if statuses and statuses != ['']:
+            statuses = set(statuses)
+            orders = [o for o in orders if o['status'] in statuses]
+
         for order in orders:
             row = [order.get(f) for f in order_fields]
             row.extend([order['history'].get(s) or '' for s in history_fields])
